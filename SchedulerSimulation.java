@@ -14,21 +14,24 @@ class Colors {
     public static final String MAGENTA = "\u001B[35m";
     public static final String BLUE = "\u001B[34m";
     public static final String RED = "\u001B[31m";
+    public static final String BG_BLUE = "\u001B[44m";
+    public static final String BG_GREEN = "\u001B[42m";
+    public static final String WHITE = "\u001B[37m";
+    public static final String BRIGHT_WHITE = "\u001B[97m";
+    public static final String BRIGHT_CYAN = "\u001B[96m";
+    public static final String BRIGHT_YELLOW = "\u001B[93m";
+    public static final String BRIGHT_GREEN = "\u001B[92m";
 }
 
-// Class representing a process
+// Class representing a process that implements Runnable to be run by a thread
 class Process implements Runnable {
     private String name;
     private int burstTime;
     private int timeQuantum;
     private int remainingTime;
 
-    // 1 Feature Introduce priority attribute for processes
+    // 1 Feature Add process priority attribute
     private int priority;
-
-    // 2 Feature Track waiting time for each process
-    private long arrivalTime;
-    private long waitingTime;
 
     public Process(String name, int burstTime, int timeQuantum, int priority) {
         this.name = name;
@@ -36,12 +39,8 @@ class Process implements Runnable {
         this.timeQuantum = timeQuantum;
         this.remainingTime = burstTime;
 
-        // 1 Feature
+        // 1 Feature Add process priority attribute
         this.priority = priority;
-
-        // 2 Feature
-        this.arrivalTime = System.currentTimeMillis();
-        this.waitingTime = 0;
     }
 
     @Override
@@ -53,18 +52,15 @@ class Process implements Runnable {
         try {
             Thread.sleep(runTime);
         } catch (InterruptedException e) {
-            System.out.println(name + " interrupted");
+            System.out.println("Interrupted");
         }
 
         remainingTime -= runTime;
 
-        System.out.println("Remaining time: " + remainingTime);
-
-        // 2 Feature
-        System.out.println("Waiting time so far: " + waitingTime + "ms");
-
-        if (remainingTime <= 0) {
-            System.out.println(name + " finished execution!");
+        if (remainingTime > 0) {
+            System.out.println("↻ " + name + " not finished");
+        } else {
+            System.out.println("✓ " + name + " finished");
         }
     }
 
@@ -72,14 +68,9 @@ class Process implements Runnable {
         try {
             Thread.sleep(remainingTime);
             remainingTime = 0;
-
-            System.out.println(name + " finished execution!");
-
-            // 2 Feature
-            System.out.println("Total waiting time: " + waitingTime + "ms");
-
+            System.out.println("✓ " + name + " finished (last process)");
         } catch (InterruptedException e) {
-            System.out.println(name + " interrupted");
+            System.out.println("Interrupted");
         }
     }
 
@@ -87,32 +78,19 @@ class Process implements Runnable {
     public int getBurstTime() { return burstTime; }
     public int getRemainingTime() { return remainingTime; }
 
-    // 1 Feature
+    // 1 Feature Add process priority attribute
     public int getPriority() { return priority; }
 
     public boolean isFinished() {
         return remainingTime <= 0;
     }
-
-    // 2 Feature
-    public void setArrivalTime(long time) {
-        this.arrivalTime = time;
-    }
-
-    public long getArrivalTime() {
-        return arrivalTime;
-    }
-
-    public void addWaitingTime(long time) {
-        this.waitingTime += time;
-    }
-
-    public long getWaitingTime() {
-        return waitingTime;
-    }
 }
 
 public class SchedulerSimulation {
+
+    // 2 Feature Add context switch counter
+    static int contextSwitches = 0;
+
     public static void main(String[] args) {
 
         int studentID = 445052071;
@@ -130,7 +108,7 @@ public class SchedulerSimulation {
 
             int burstTime = timeQuantum/2 + random.nextInt(2 * timeQuantum + 1);
 
-            // 1 Feature
+            // 1 Feature Add process priority attribute
             int priority = 1 + random.nextInt(5);
 
             Process process = new Process("P" + i, burstTime, timeQuantum, priority);
@@ -142,11 +120,8 @@ public class SchedulerSimulation {
 
             Thread currentThread = processQueue.poll();
 
-            // 2 Feature
-            Process process = processMap.get(currentThread);
-            long currentTime = System.currentTimeMillis();
-            long wait = currentTime - process.getArrivalTime();
-            process.addWaitingTime(wait);
+            // 2 Feature Count context switch
+            contextSwitches++;
 
             currentThread.start();
 
@@ -155,6 +130,8 @@ public class SchedulerSimulation {
             } catch (InterruptedException e) {
                 System.out.println("Main thread interrupted.");
             }
+
+            Process process = processMap.get(currentThread);
 
             if (!process.isFinished()) {
                 if (!processQueue.isEmpty()) {
@@ -165,23 +142,22 @@ public class SchedulerSimulation {
             }
         }
 
+        // 2 Feature Display total context switches
+        System.out.println("\nTotal context switches: " + contextSwitches);
+
         System.out.println("\nALL PROCESSES COMPLETED\n");
     }
 
-    public static void addProcessToQueue(Process process, Queue<Thread> processQueue, 
+    public static void addProcessToQueue(Process process, Queue<Thread> processQueue,
                                         Map<Thread, Process> processMap) {
 
         Thread thread = new Thread(process);
-
-        // 2 Feature
-        process.setArrivalTime(System.currentTimeMillis());
-
         processQueue.add(thread);
         processMap.put(thread, process);
 
-        // 1 Feature
-        System.out.println("➕ " + process.getName() + 
-                           " (Priority: " + process.getPriority() + ")" +
-                           " added to ready queue | Burst: " + process.getBurstTime());
+        // 1 Feature Show priority in ready queue
+        System.out.println("➕ " + process.getName() +
+                " (Priority: " + process.getPriority() + ")" +
+                " added to ready queue | Burst: " + process.getBurstTime());
     }
 }
