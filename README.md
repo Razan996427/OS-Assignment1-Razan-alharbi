@@ -453,7 +453,7 @@ Student Name: RAZAN MOHAMMMED ALHARBI
 Student ID: 445052071
 GitHub Username: Razan996427
 Repository Link: https://github.com/Razan996427/OS-Assignment1-Razan-alharbi.git
-Video Link: [Google Drive link - make sure it's accessible to anyone with the link]
+Video Link: https://drive.google.com/file/d/1c6k2zQEtUD2U-ZTjHvREk9U5odUmgTnj/view?usp=drivesdk
 Date Submitted: 2 april,2026
 ```
 
